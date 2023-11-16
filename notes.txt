@@ -1,0 +1,23 @@
+champs dans le tbl
+
+data de base des personnes
+    - genre 
+    - Nom
+    - prenom
+    - contact
+    - AVS
+    - adresse
+
+
+salaire brut 
+    - salaire horaire
+    - suppléement vacances
+
+charges sociales
+    - Cotisation AVS/AIAPG
+    - Cotisation AC
+    - AANP
+    - ParticpationAFAM
+    - LPP
+    - AC1
+    - Impôts source
