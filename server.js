@@ -123,20 +123,34 @@ app.post('/generate-pdf', async (req, res) => {
     doc.font("Helvetica-Bold").fontSize(14);
     doc.text('Décompte de Salaire ' + requestData.mois + ' ' + requestData.annee, { align: 'left' });
     doc.moveTo(60, doc.y).lineTo(540, doc.y).stroke();
+    let table1=[]
+    if (requestData.divers == 0) {
+        //table
+        table1 = {
+            headers: ['Salaire brut', '            Coeff./taux', '         Base, Salaire', '                  Montant'],
+            rows: [
+                ['Salaire horaire', requestData.workHour, requestData.base, requestData.salaireHoraire],
+                ['Supplément vacances', requestData.pourcentVac, ' ', requestData.suppVac],
+                ['', '', '', ''],
+                ['Sous total brut', '', '', requestData.totBrut],
+                ['', '', '', ''],
+            ]
+        };
+    } else {
+        //table
+        table1 = {
+            headers: ['Salaire brut', '            Coeff./taux', '         Base, Salaire', '                  Montant'],
+            rows: [
+                ['Salaire horaire', requestData.workHour, requestData.base, requestData.salaireHoraire],
+                ['Suplé. vacances', requestData.pourcentVac, ' ', requestData.suppVac],
+                ['Divers', '', '', requestData.divers],
+                ['', '', '', ''],
+                ['Sous total brut', '', '', requestData.totBrut],
+                ['', '', '', ''],
+            ]
+        };
+    }
 
-
-    //table
-    const table1 = {
-        headers: ['Salaire brut', '            Coeff./taux', '         Base, Salaire', '                  Montant'],
-        rows: [
-            ['Salaire horaire', requestData.workHour, requestData.base, requestData.salaireHoraire],
-            ['Supplément vacances', requestData.pourcentVac, ' ', requestData.suppVac],
-            ['', '', '', ''],
-            ['', '', '', ''],
-            ['Sous total brut', '', '', requestData.totBrut],
-            ['', '', '', ''],
-        ]
-    };
     doc.moveDown().table(table1, 60, doc.y, {
         prepareHeader: () => doc.font('Helvetica-Bold').fontSize(12),
         prepareRow: (row, i) => doc.font('Helvetica').fontSize(12),
@@ -146,13 +160,13 @@ app.post('/generate-pdf', async (req, res) => {
     const table2 = {
         headers: ['Charges sociales', '', '', ''],
         rows: [
-            ['Cotis. AVS/AI/APG', requestData.avsaiapg, requestData.totBrut, '-' + requestData.avsaiapgM],  
-            ['Cotisation AC', requestData.ac, requestData.totBrut, '-' + requestData.acM],  
-            ['AANP', requestData.aanp, requestData.totBrut, '-' + requestData.aanpM],  
-            ['Participation AFAM', requestData.afam, requestData.totBrut, '-' + requestData.afamM],  
-            ['LPP', requestData.lpp, requestData.totBrut, '-' + requestData.lppM], 
-            ['Impots Source', requestData.impotSource, requestData.totBrut, '-' + requestData.impotSourceM],  
-            ['', '', '', '']   
+            ['Cotis. AVS/AI/APG', requestData.avsaiapg, requestData.totBrut, '-' + requestData.avsaiapgM],
+            ['Cotisation AC', requestData.ac, requestData.totBrut, '-' + requestData.acM],
+            ['AANP', requestData.aanp, requestData.totBrut, '-' + requestData.aanpM],
+            ['Participation AFAM', requestData.afam, requestData.totBrut, '-' + requestData.afamM],
+            ['LPP', requestData.lpp, requestData.totBrut, '-' + requestData.lppM],
+            ['Impots Source', requestData.impotSource, requestData.totBrut, '-' + requestData.impotSourceM],
+            ['', '', '', '']
         ]
     };
 
