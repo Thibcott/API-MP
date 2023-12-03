@@ -122,8 +122,8 @@ app.post('/generate-pdf', async (req, res) => {
 
     doc.font("Helvetica-Bold").fontSize(14);
     doc.text('Décompte de Salaire ' + requestData.mois + ' ' + requestData.annee, { align: 'left' });
-    doc.moveTo(60, doc.y).lineTo(540, doc.y).stroke();
-    let table1=[]
+    doc.moveTo(60, doc.y).lineTo(530, doc.y).stroke();
+    let table1 = []
     if (requestData.divers == 0) {
         //table
         table1 = {
@@ -154,7 +154,7 @@ app.post('/generate-pdf', async (req, res) => {
     doc.moveDown().table(table1, 60, doc.y, {
         prepareHeader: () => doc.font('Helvetica-Bold').fontSize(12),
         prepareRow: (row, i) => doc.font('Helvetica').fontSize(12),
-        width: 490
+        width: 480
     });
 
     const table2 = {
@@ -173,7 +173,7 @@ app.post('/generate-pdf', async (req, res) => {
     doc.moveDown().table(table2, 60, doc.y, {
         prepareHeader: () => doc.font('Helvetica-Bold').fontSize(12),
         prepareRow: (row, i) => doc.font('Helvetica').fontSize(12),
-        width: 490
+        width: 480
     });
 
     //end
@@ -181,7 +181,7 @@ app.post('/generate-pdf', async (req, res) => {
     doc.text('Total des déductions sociales', { align: 'left' });
     doc.moveUp(1);
     doc.font("Helvetica-BoldOblique");
-    doc.text('-' + requestData.totDeductions, { align: 'right', indent: 220 }); // - CHANGE
+    doc.text('-' + requestData.totDeductions, { align: 'right'}); // - CHANGE
 
     doc.moveDown(2);
 
@@ -189,10 +189,9 @@ app.post('/generate-pdf', async (req, res) => {
     doc.text('Salaire net', { align: 'left' });
     doc.moveUp(1);
     doc.font("Helvetica-Bold");
-    doc.text(requestData.SalaireNet, { align: 'right', indent: 220 });// - CHANGE
-
+    doc.text(requestData.SalaireNet, { align: 'right'});// - CHANGE
     doc.moveDown(1);
-    doc.moveTo(60, doc.y).lineTo(540, doc.y).stroke();
+    doc.moveTo(60, doc.y).lineTo(530, doc.y).stroke();
 
     // Envoi du fichier PDF comme réponse
     res.setHeader('Content-Type', 'application/pdf');
