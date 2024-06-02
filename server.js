@@ -35,7 +35,19 @@ db.connect((err) => {
 });
 //GET
 app.get('/getPersonnes', (req, res) => {
+    // console.log("hello i m local api")
     db.query('SELECT * FROM Personne', (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des données :', err);
+            return res.status(500).json({ error: 'Erreur lors de la récupération des données' });
+        }
+        res.json(results);
+    });
+});
+
+//GET
+app.get('/getHistoric', (req, res) => {
+    db.query('SELECT * FROM historic', (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des données :', err);
             return res.status(500).json({ error: 'Erreur lors de la récupération des données' });
@@ -95,7 +107,19 @@ app.delete('/deletePersonne/:id', (req, res) => {
 
 app.post('/generate-pdf', async (req, res) => {
     const requestData = req.body;
-    console.log(requestData)
+
+    //ajouter les donneés dans la table historique
+    if (!requestData) {
+        return res.status(400).json({ error: 'les données sont obligatoire' });
+    }
+    const sql = `INSERT INTO historic (id_personne, data) VALUES (?,?);`;
+    db.query(sql, [requestData.idPersonne, JSON.stringify(requestData)], (err, result) => {
+
+        if (err) {
+            console.error('Erreur lors de l\'ajout de la requête :', err);
+            return res.status(500).json({ error: 'Erreur lors de l\'ajout de la requête dans la base de données', status: false });
+        }
+    });
     // Créez un nouveau document PDF
     const doc = new PDFDocument({ size: 'A4' });
 
@@ -125,33 +149,62 @@ app.post('/generate-pdf', async (req, res) => {
     doc.moveTo(60, doc.y).lineTo(530, doc.y).stroke();
     let table1 = []
     if (requestData.divers == 0) {
-        //table
-        table1 = {
-            headers: ['Salaire brut', '            Coeff./taux', '         Base, Salaire', '                  Montant'],
-            rows: [
-                ['Salaire horaire', requestData.workHour, requestData.base, requestData.salaireHoraire],
-                ['Supplément vacances', requestData.pourcentVac, ' ', requestData.suppVac],
-                ['', '', '', ''],
-                ['Sous total brut', '', '', requestData.totBrut],
-                ['', '', '', ''],
-            ]
-        };
+        if (requestData.freePrompt == "") {
+            table1 = {
+                headers: ['Salaire brut', '           Coeff./taux', '         Base, Salaire', '                 Montant'],
+                rows: [
+                    ['Salaire horaire', requestData.workHour, requestData.base, requestData.salaireHoraire],
+                    ['Supp. vac. + Jours fériés', requestData.pourcentVac, ' ', requestData.suppVac],
+                    ['', '', '', ''],
+                    ['Sous total brut', '', '', requestData.totBrut],
+                    ['', '', '', ''],
+                ]
+            }
+        } else {
+            table1 = {
+                headers: ['Salaire brut', '           Coeff./taux', '         Base, Salaire', '                 Montant'],
+                rows: [
+                    ['Salaire horaire', requestData.workHour, requestData.base, requestData.salaireHoraire],
+                    ['Sup. vac. + Jours fériés', requestData.pourcentVac, ' ', requestData.suppVac],
+                    [requestData.freePrompt, '', '', requestData.freeMontant],
+                    ['', '', '', ''],
+                    ['Sous total brut', '', '', requestData.totBrut],
+                    ['', '', '', ''],
+                ]
+            }
+        }
+
     } else {
-        //table
-        table1 = {
-            headers: ['Salaire brut', '            Coeff./taux', '         Base, Salaire', '                  Montant'],
-            rows: [
-                ['Salaire horaire', requestData.workHour, requestData.base, requestData.salaireHoraire],
-                ['Suplé. vacances', requestData.pourcentVac, ' ', requestData.suppVac],
-                ['Divers', '', '', requestData.divers],
-                ['', '', '', ''],
-                ['Sous total brut', '', '', requestData.totBrut],
-                ['', '', '', ''],
-            ]
-        };
+        if (requestData.freePrompt == "") {
+            table1 = {
+                headers: ['Salaire brut', '            Coeff./taux', '         Base, Salaire', '                 Montant'],
+                rows: [
+                    ['Salaire horaire', requestData.workHour, requestData.base, requestData.salaireHoraire],
+                    ['Supp. vac. + Jours fériés', requestData.pourcentVac, ' ', requestData.suppVac],
+                    ['Divers', '', '', requestData.divers],
+                    ['', '', '', ''],
+                    ['Sous total brut', '', '', requestData.totBrut],
+                    ['', '', '', ''],
+                ]
+            }
+        } else {
+            table1 = {
+                headers: ['Salaire brut', '            Coeff./taux', '         Base, Salaire', '                Montant'],
+                rows: [
+                    ['Salaire horaire', requestData.workHour, requestData.base, requestData.salaireHoraire],
+                    ['Supp. vac. + Jours fériés', requestData.pourcentVac, ' ', requestData.suppVac],
+                    ['Divers', '', '', requestData.divers],
+                    [requestData.freePrompt, '', '', requestData.freeMontant],
+                    ['', '', '', ''],
+                    ['Sous total brut', '', '', requestData.totBrut],
+                    ['', '', '', ''],
+                ]
+            }
+        }
     }
 
-    doc.moveDown().table(table1, 60, doc.y, {
+
+    doc.moveDown().table(table1, 65, doc.y, {
         prepareHeader: () => doc.font('Helvetica-Bold').fontSize(12),
         prepareRow: (row, i) => doc.font('Helvetica').fontSize(12),
         width: 480
@@ -170,7 +223,7 @@ app.post('/generate-pdf', async (req, res) => {
         ]
     };
 
-    doc.moveDown().table(table2, 60, doc.y, {
+    doc.moveDown().table(table2, 65, doc.y, {
         prepareHeader: () => doc.font('Helvetica-Bold').fontSize(12),
         prepareRow: (row, i) => doc.font('Helvetica').fontSize(12),
         width: 480
@@ -181,7 +234,7 @@ app.post('/generate-pdf', async (req, res) => {
     doc.text('Total des déductions sociales', { align: 'left' });
     doc.moveUp(1);
     doc.font("Helvetica-BoldOblique");
-    doc.text('-' + requestData.totDeductions, { align: 'right'}); // - CHANGE
+    doc.text('-' + requestData.totDeductions, { align: 'right' }); // - CHANGE
 
     doc.moveDown(2);
 
@@ -189,9 +242,9 @@ app.post('/generate-pdf', async (req, res) => {
     doc.text('Salaire net', { align: 'left' });
     doc.moveUp(1);
     doc.font("Helvetica-Bold");
-    doc.text(requestData.SalaireNet, { align: 'right'});// - CHANGE
+    doc.text(requestData.SalaireNet, { align: 'right' });// - CHANGE
     doc.moveDown(1);
-    doc.moveTo(60, doc.y).lineTo(530, doc.y).stroke();
+    doc.moveTo(65, doc.y).lineTo(530, doc.y).stroke();
 
     // Envoi du fichier PDF comme réponse
     res.setHeader('Content-Type', 'application/pdf');
